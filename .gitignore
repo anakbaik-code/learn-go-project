@@ -1,0 +1,46 @@
+# --- Environment Variables (CRITICAL FOR SECURITY) ---
+.env
+.env.*
+!.env.example
+
+# --- IDEs / Editors ---
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Go Environment & Local Binaries ---
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+out/
+dist/
+main
+coverage.out
+*.coverprofile
+
+# --- Project Specific Ignored Files ---
+# File catatan/coretan personal yang tidak perlu masuk repo
+note.txt
+
+# --- App Runtime Logs & Cache ---
+# Abaikan semua file log di dalam folder storage/logs/
+storage/logs/*.log
+# Atau jika ingin mengabaikan seluruh isi folder logs kecuali foldernya sendiri:
+# storage/logs/*
+# !storage/logs/.gitkeep
+
+# --- User Uploads / Media (Dynamic Files) ---
+# Jangan masukkan file yang diupload user ke Git repo
+uploads/*
+!uploads/.gitkeep
