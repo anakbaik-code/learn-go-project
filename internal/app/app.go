@@ -1,28 +1,19 @@
 package app
 
 import (
-	"go-dbsqlc/db"
 	"go-dbsqlc/internal/config"
 	handler "go-dbsqlc/internal/handler"
-	"go-dbsqlc/internal/repository"
-	"go-dbsqlc/internal/service"
+	
 )
 
 type App struct {
-	Config *config.Config
-	UserHandler *handler.UserHandler
+	Config  *config.Config
+	Handler *handler.Handlers
 }
 
-func NewApp(cfg *config.Config) *App {
-	sqlDB := config.NewMySQL(cfg)
-	db := db.New(sqlDB)
-
-	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userService)
-
+func NewApp(config *config.Config,handler *handler.Handlers) *App{
 	return &App{
-		Config: cfg,
-		UserHandler: userHandler,
+		Config: config,
+		Handler: handler,
 	}
 }

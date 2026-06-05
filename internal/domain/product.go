@@ -1,9 +1,7 @@
 package domain
+
 type Product struct {
-	ID        int64
-	Name      string
-	Price     int32
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Price int32  `json:"price"`
 }
-
-
-

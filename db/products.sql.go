@@ -11,7 +11,10 @@ import (
 )
 
 const createProduct = `-- name: CreateProduct :execresult
-INSERT INTO products (name, price) VALUES (?, ?)
+INSERT INTO
+    products (name, price)
+VALUES
+    (?, ?)
 `
 
 type CreateProductParams struct {
@@ -23,8 +26,24 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (s
 	return q.db.ExecContext(ctx, createProduct, arg.Name, arg.Price)
 }
 
+const deleteProduct = `-- name: DeleteProduct :exec
+DELETE FROM products
+WHERE
+    id = ?
+`
+
+func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteProduct, id)
+	return err
+}
+
 const getProduct = `-- name: GetProduct :one
-SELECT id, name, price, created_at FROM products WHERE id = ?
+SELECT
+    id, name, price, created_at
+FROM
+    products
+WHERE
+    id = ?
 `
 
 func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
@@ -40,7 +59,10 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, price, created_at FROM products
+SELECT
+    id, name, price, created_at
+FROM
+    products
 `
 
 func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
@@ -69,4 +91,24 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateProduct = `-- name: UpdateProduct :exec
+UPDATE products
+SET
+    name = ?,
+    price= ?
+WHERE
+    id = ?
+`
+
+type UpdateProductParams struct {
+	Name  string
+	Price int32
+	ID    int64
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
+	_, err := q.db.ExecContext(ctx, updateProduct, arg.Name, arg.Price, arg.ID)
+	return err
 }

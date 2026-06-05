@@ -16,12 +16,16 @@ type Response struct {
 func NewRouter(app *app.App) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /users", app.UserHandler.Create)
-	mux.HandleFunc("GET /users", app.UserHandler.List)
-	mux.HandleFunc("GET /users/{id}", app.UserHandler.GetById)
-	mux.HandleFunc("PUT /users/{id}", app.UserHandler.Update)
-	mux.HandleFunc("DELETE /users/{id}", app.UserHandler.Delete)
-	mux.HandleFunc("POST /users/{id}/avatar", app.UserHandler.UploadAvatar)
+	// User Route
+	mux.HandleFunc("POST /users", app.Handler.User.Create)
+	mux.HandleFunc("GET /users", app.Handler.User.List)
+	mux.HandleFunc("GET /users/{id}", app.Handler.User.GetById)
+	mux.HandleFunc("PUT /users/{id}", app.Handler.User.Update)
+	mux.HandleFunc("DELETE /users/{id}", app.Handler.User.Delete)
+	mux.HandleFunc("POST /users/{id}/avatar", app.Handler.User.UploadAvatar)
+
+	// Product Route
+	mux.HandleFunc("GET /products/{id}", app.Handler.Product.GetById)
 
 	// NotFound Route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

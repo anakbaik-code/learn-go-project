@@ -20,11 +20,15 @@ func main() {
 	slog.Info("config loaded ...")
 
 	// init app
-	application := app.NewApp(cfg)
+	app, cleanup, err := app.InitializeApp(cfg)
+	if err != nil {
+		log.Fatalf("Gagal inisialisasi aplikasi: %v", err)
+	}
+	defer cleanup()
 	slog.Info("dependencies initialized")
 
 	// init router
-	r := router.NewRouter(application)
+	r := router.NewRouter(app)
 	slog.Info("router initialized")
 
 	addr := ":" + cfg.AppPort

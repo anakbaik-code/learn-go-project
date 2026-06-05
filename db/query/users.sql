@@ -38,4 +38,4 @@ SET
 WHERE
     id = ?;
 
--- name: 
+-- name:

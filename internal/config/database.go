@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func NewMySQL(cfg *Config) *sql.DB {
+func NewMySQL(cfg *Config) (*sql.DB, func(), error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true",
 		cfg.DBUser,
 		cfg.DBPass,
@@ -19,7 +19,7 @@ func NewMySQL(cfg *Config) *sql.DB {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
 	// pool config
@@ -28,8 +28,13 @@ func NewMySQL(cfg *Config) *sql.DB {
 	db.SetConnMaxLifetime(3 * time.Minute)
 
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
-	return db
+	cleanup := func() {
+		log.Println("stopping database connection safe ... ")
+		db.Close()
+	}
+
+	return db, cleanup, nil
 }
