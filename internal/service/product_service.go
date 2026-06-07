@@ -10,29 +10,31 @@ import (
 )
 
 type ProductService interface {
-	GetProduct(ctx context.Context,id int64)(domain.Product,error)
+	GetProduct(ctx context.Context, id int64) (domain.Product, error)
 }
 type productService struct {
-	log *slog.Logger
+	log  *slog.Logger
 	repo repository.ProductRepository
 }
 
-func NewProductService(r repository.ProductRepository) ProductService {
-	return  &productService{
-		
+func NewProductService(logger *slog.Logger, r repository.ProductRepository) ProductService {
+	return &productService{
+		log:  logger.With("component", "product_service"),
 		repo: r,
 	}
 }
 
-func (s *productService) GetProduct(ctx context.Context,id int64)(domain.Product,error){
-
-	user, err := s.repo.GetById(ctx, id)
+func (s *productService) GetProduct(ctx context.Context, id int64) (domain.Product, error) {
+	product, err := s.repo.GetById(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.Product{}, errors.New("user not found")
+			return domain.Product{}, errors.New("product not found")
 		}
 
+		slog.Error("database error occurred while fetching product",
+			"error", err,
+			"product_id", id)
 		return domain.Product{}, err
 	}
-	return user, nil
+	return product, nil
 }
