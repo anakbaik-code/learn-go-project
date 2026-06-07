@@ -12,6 +12,7 @@ import (
 	"go-dbsqlc/internal/handler"
 	"go-dbsqlc/internal/repository"
 	"go-dbsqlc/internal/service"
+	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -25,9 +26,10 @@ func InitializeApp(cfg *config.Config) (*App, func(), error) {
 	userRepository := repository.NewUserRepository(queries)
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
+	logger := slog.Default()
 	productRepository := repository.NewProductRepository(queries)
 	productService := service.NewProductService(productRepository)
-	productHandler := handler.NewProductHandler(productService)
+	productHandler := handler.NewProductHandler(logger, productService)
 	handlersParam := handler.HandlersParam{
 		User:    userHandler,
 		Product: productHandler,

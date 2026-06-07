@@ -7,13 +7,16 @@ import (
 	"go-dbsqlc/db"
 	"go-dbsqlc/internal/config"
 	"go-dbsqlc/internal/handler"
-
+	"log/slog"
 
 	"github.com/google/wire"
 )
 
 func InitializeApp(cfg *config.Config) (*App, func(), error) {
     wire.Build(
+        // slog
+        slog.Default,
+
         // DB provides
         config.NewMySQL,
         db.New,

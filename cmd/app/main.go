@@ -5,24 +5,24 @@ import (
 	"go-dbsqlc/internal/config"
 	"go-dbsqlc/internal/logger"
 	"go-dbsqlc/internal/router"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
 )
 
 func main() {
-	// logger init
-	logfile := logger.InitLogger()
-	defer logfile.Close()
-
 	// load config
 	cfg := config.LoadConfig()
+
+	// logger init
+	logger.InitLogger(cfg.LogLevel)
 	slog.Info("config loaded ...")
 
 	// init app
 	app, cleanup, err := app.InitializeApp(cfg)
 	if err != nil {
-		log.Fatalf("Gagal inisialisasi aplikasi: %v", err)
+		slog.Error("failed initialize application")
+		os.Exit(1)
 	}
 	defer cleanup()
 	slog.Info("dependencies initialized")
@@ -32,10 +32,11 @@ func main() {
 	slog.Info("router initialized")
 
 	addr := ":" + cfg.AppPort
-	slog.Info("server running on", "addr", addr)
+	slog.Info("server started", "addr", addr)
 
 	// start server
 	if err := http.ListenAndServe(addr, r); err != nil {
-		log.Fatal("server failed : ", err)
+		slog.Error("server failed to start", "error", err)
+		os.Exit(1)
 	}
 }

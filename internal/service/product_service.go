@@ -6,17 +6,20 @@ import (
 	"errors"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/repository"
+	"log/slog"
 )
 
 type ProductService interface {
 	GetProduct(ctx context.Context,id int64)(domain.Product,error)
 }
 type productService struct {
+	log *slog.Logger
 	repo repository.ProductRepository
 }
 
 func NewProductService(r repository.ProductRepository) ProductService {
 	return  &productService{
+		
 		repo: r,
 	}
 }

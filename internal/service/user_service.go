@@ -100,7 +100,7 @@ func (s *userService) UploadAvatar(ctx context.Context, id int64, file multipart
 
 	url := "/uploads/" + filename
 	fmt.Println(url)
-	
+
 	err = s.repo.UpdateAvatar(ctx, domain.User{
 		ID:        id,
 		AvatarUrl: url,
