@@ -28,7 +28,7 @@ func InitializeApp(cfg *config.Config) (*App, func(), error) {
 	userHandler := handler.NewUserHandler(userService)
 	logger := slog.Default()
 	productRepository := repository.NewProductRepository(queries)
-	productService := service.NewProductService(productRepository)
+	productService := service.NewProductService(logger, productRepository)
 	productHandler := handler.NewProductHandler(logger, productService)
 	handlersParam := handler.HandlersParam{
 		User:    userHandler,

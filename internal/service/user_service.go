@@ -17,7 +17,7 @@ type UserService interface {
 	GetUser(ctx context.Context, id int64) (domain.User, error)
 	CreateUser(ctx context.Context, user domain.User) (domain.User, error)
 	ListUsers(ctx context.Context) ([]domain.User, error)
-	UpdateUser(ctx context.Context, id int64, req domain.UpdateUserRequest) error
+	UpdateUser(ctx context.Context, id int64, req domain.UpdateUserParam) error
 	DeleteUser(ctx context.Context, id int64) error
 	UploadAvatar(ctx context.Context, id int64, file multipart.File, header *multipart.FileHeader) (string, error)
 }
@@ -69,7 +69,7 @@ func (s *userService) ListUsers(ctx context.Context) ([]domain.User, error) {
 	return users, nil
 }
 
-func (s *userService) UpdateUser(ctx context.Context, id int64, req domain.UpdateUserRequest) error {
+func (s *userService) UpdateUser(ctx context.Context, id int64, req domain.UpdateUserParam) error {
 	user := domain.User{
 		ID:    id,
 		Name:  req.Name,

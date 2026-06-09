@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"go-dbsqlc/internal/service"
+	"go-dbsqlc/pkg/response"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -41,6 +42,18 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Mapping Response
+	productResponse := ProductResponse{
+		ID:    product.ID,
+		Name:  product.Name,
+		Price: product.Price,
+	}
+	finalResponse := response.NewSuccessResponse(
+		"successfully fetched product details",
+		productResponse,
+	)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(product)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
 }

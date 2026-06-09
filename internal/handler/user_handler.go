@@ -26,7 +26,7 @@ func NewUserHandler(s service.UserService) *UserHandler {
 
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	//  decode JSON request
-	var req domain.CreateUserRequest
+	var req CreateUserRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
@@ -89,11 +89,6 @@ func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-type UpdateUserRequest struct {
-	Name  string `json:"name" validate:"required,min=3"`
-	Email string `json:"email" validate:"required,email"`
-}
-
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -102,7 +97,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req domain.UpdateUserRequest
+	var req UpdateUserRequest
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -117,7 +112,13 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.UpdateUser(r.Context(), id, req)
+	// mapping param
+	updateParam := domain.UpdateUserParam{
+		Name:  req.Name,
+		Email: req.Email,
+	}
+
+	err = h.service.UpdateUser(r.Context(), id, updateParam)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
