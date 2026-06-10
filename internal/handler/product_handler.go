@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"go-dbsqlc/internal/handler/dto"
 	"go-dbsqlc/internal/service"
 	"go-dbsqlc/pkg/response"
 	"log/slog"
@@ -44,7 +45,7 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mapping Response
-	productResponse := ProductResponse{
+	productResponse := dto.ProductResponse{
 		ID:    product.ID,
 		Name:  product.Name,
 		Price: product.Price,

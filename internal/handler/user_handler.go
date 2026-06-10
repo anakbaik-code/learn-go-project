@@ -3,8 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"go-dbsqlc/internal/domain"
+	"go-dbsqlc/internal/handler/dto"
 	"go-dbsqlc/internal/service"
 	"go-dbsqlc/internal/validator"
+	"go-dbsqlc/pkg/response"
 	"log"
 	"net/http"
 	"strconv"
@@ -26,7 +28,7 @@ func NewUserHandler(s service.UserService) *UserHandler {
 
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	//  decode JSON request
-	var req CreateUserRequest
+	var req dto.CreateUserRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
@@ -47,9 +49,21 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Mapping Response
+	userResponse := dto.UserResponse{
+		ID:    result.ID,
+		Name:  result.Name,
+		Email: result.Email,
+	}
+
+	finalResponse := response.NewSuccessResponse(
+		"User Created", userResponse,
+	)
+
 	// response sukses
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
 }
 
 func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
@@ -74,8 +88,20 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Mapping REsponse
+	userResponse := dto.UserResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+	finalResponse := response.NewSuccessResponse(
+		"succesfully get user id ",
+		userResponse,
+	)
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
 
 }
 
@@ -85,8 +111,24 @@ func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// Mapping DTO use Slice
+	userResponse := make([]dto.UserResponse, 0, len(users))
+	for _, v := range users {
+		userDto := dto.UserResponse{
+			ID:    v.ID,
+			Name:  v.Name,
+			Email: v.Name,
+		}
+		userResponse = append(userResponse, userDto)
+	}
+	finalResponse := response.NewSuccessResponse(
+		"Successfully fetched user list",
+		userResponse,
+	)
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
 }
 
 func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +139,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req UpdateUserRequest
+	var req dto.UpdateUserRequest
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -124,12 +166,14 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	finalResponse := response.NewSuccessResponse[any](
+		"User updated successfully", nil,
+	)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "user updated successfully",
-	})
+	json.NewEncoder(w).Encode(finalResponse)
 }
 
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -146,12 +190,15 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	finalResponse := response.NewSuccessResponse[any](
+		"user deleted successfully", nil,
+	)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "user deleted successfully",
-	})
+	json.NewEncoder(w).Encode(finalResponse)
 }
 
 func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +215,7 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed upload", http.StatusBadRequest)
 		return
 	}
-	
+
 	err = validator.ValidateImage(file, header)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -182,9 +229,16 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Mapping DTO avatarUrl
+	avatarResponse := dto.UploadAvatar{
+		AvatarUrl: url,
+	}
+	finalResponse := response.NewSuccessResponse(
+		"Avatar Uploaded successfully",
+		avatarResponse,
+	)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"message":   "upload success",
-		"image_url": url,
-	})
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
+
 }

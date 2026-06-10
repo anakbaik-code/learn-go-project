@@ -1,4 +1,4 @@
-package handler
+package dto
 
 type ProductResponse struct {
 	ID    int64  `json:"id"`
