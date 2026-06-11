@@ -39,7 +39,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 
 const getUser = `-- name: GetUser :one
 SELECT
-    id, name, email, avatar_url, created_at
+    id, name, email, created_at, avatar_url
 FROM
     users
 WHERE
@@ -53,15 +53,15 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.ID,
 		&i.Name,
 		&i.Email,
-		&i.AvatarUrl,
 		&i.CreatedAt,
+		&i.AvatarUrl,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
 SELECT
-    id, name, email, avatar_url, created_at
+    id, name, email, created_at, avatar_url
 FROM
     users
 `
@@ -79,8 +79,8 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.ID,
 			&i.Name,
 			&i.Email,
-			&i.AvatarUrl,
 			&i.CreatedAt,
+			&i.AvatarUrl,
 		); err != nil {
 			return nil, err
 		}

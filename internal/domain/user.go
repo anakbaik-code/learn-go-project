@@ -6,8 +6,3 @@ type User struct {
 	Email     string 
 	AvatarUrl string 
 }
-
-type UpdateUserParam struct {
-	Name string
-	Email string
-}

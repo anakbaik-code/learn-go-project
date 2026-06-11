@@ -10,10 +10,13 @@ migrate-down:
 	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" down 1
 
 migrate-force:
-	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" force $(v)
+	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" force $(version)
 
 migrate-version:
 	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" version
+
+migrate-create:
+		migrate create -ext sql -dir migrations $(name)
 
 # ===== SQLC =====
 sqlc:

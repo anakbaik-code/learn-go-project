@@ -19,6 +19,6 @@ type User struct {
 	ID        int64
 	Name      string
 	Email     string
-	AvatarUrl sql.NullString
 	CreatedAt sql.NullTime
+	AvatarUrl sql.NullString
 }

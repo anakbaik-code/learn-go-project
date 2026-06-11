@@ -15,10 +15,10 @@ type ProductHandler struct {
 	log     *slog.Logger
 }
 
-func NewProductHandler(logger *slog.Logger, s service.ProductService) *ProductHandler {
+func NewProductHandler(l *slog.Logger, s service.ProductService) *ProductHandler {
 	return &ProductHandler{
 		service: s,
-		log:     logger.With("component", "product_handler"),
+		log:     l.With("component", "product_handler"),
 	}
 }
 
@@ -58,3 +58,5 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(finalResponse)
 }
+
+

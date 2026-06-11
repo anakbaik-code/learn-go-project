@@ -2,24 +2,16 @@ package validator
 
 import (
 	"errors"
+	"github.com/go-playground/validator/v10"
 	"go-dbsqlc/internal/domain"
 )
 
-
-func ValidateCreateProduct(name,price domain.Product) error {
-	if name.Name == "" {
-		return errors.New("name wajib")
+func ValidateCreateProduct(v *validator.Validate, product domain.Product) error {
+	if err := v.Var(product.Name, "required"); err != nil {
+		return errors.New("name must fill")
 	}
-	if price.Price <= 0 {
-		return errors.New("price invalid")
+	if err := v.Var(product.Price, "gt=0"); err != nil {
+		return errors.New("price must not null")
 	}
-	return nil
-}
-
-func ValidateGetProductByID(id int64) error {
-	if id <= 0 {
-		return errors.New("invalid product id")
-	}
-
 	return nil
 }

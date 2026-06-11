@@ -2,12 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"go-dbsqlc/db"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/handler/dto"
 	"go-dbsqlc/internal/service"
 	"go-dbsqlc/internal/validator"
 	"go-dbsqlc/pkg/response"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -17,12 +18,14 @@ import (
 type UserHandler struct {
 	service  service.UserService
 	validate *playvalidator.Validate
+	log      *slog.Logger
 }
 
-func NewUserHandler(s service.UserService) *UserHandler {
+func NewUserHandler(l *slog.Logger, s service.UserService) *UserHandler {
 	return &UserHandler{
 		service:  s,
 		validate: playvalidator.New(),
+		log:      l.With("component", "users_handler"),
 	}
 }
 
@@ -34,7 +37,6 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-	log.Printf("REQ: %+v\n", req)
 
 	// mapping ke domain
 	user := domain.User{
@@ -45,6 +47,7 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// panggil service
 	result, err := h.service.CreateUser(r.Context(), user)
 	if err != nil {
+		h.log.Error("failed create user from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -84,6 +87,7 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	// panggil service
 	user, err := h.service.GetUser(r.Context(), id)
 	if err != nil {
+		h.log.Error("failed to get product from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -108,6 +112,7 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	users, err := h.service.ListUsers(r.Context())
 	if err != nil {
+		h.log.Error("failed to get list product from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -155,13 +160,14 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// mapping param
-	updateParam := domain.UpdateUserParam{
+	updateParam := db.UpdateUserParams{
 		Name:  req.Name,
 		Email: req.Email,
 	}
 
 	err = h.service.UpdateUser(r.Context(), id, updateParam)
 	if err != nil {
+		h.log.Error("failed update product from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -187,6 +193,7 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.DeleteUser(r.Context(), id)
 	if err != nil {
+		h.log.Error("failed delete product from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

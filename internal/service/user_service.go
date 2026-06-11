@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"go-dbsqlc/db"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/repository"
 	"go-dbsqlc/internal/validator"
@@ -17,7 +18,7 @@ type UserService interface {
 	GetUser(ctx context.Context, id int64) (domain.User, error)
 	CreateUser(ctx context.Context, user domain.User) (domain.User, error)
 	ListUsers(ctx context.Context) ([]domain.User, error)
-	UpdateUser(ctx context.Context, id int64, req domain.UpdateUserParam) error
+	UpdateUser(ctx context.Context, id int64, req db.UpdateUserParams) error
 	DeleteUser(ctx context.Context, id int64) error
 	UploadAvatar(ctx context.Context, id int64, file multipart.File, header *multipart.FileHeader) (string, error)
 }
@@ -69,7 +70,7 @@ func (s *userService) ListUsers(ctx context.Context) ([]domain.User, error) {
 	return users, nil
 }
 
-func (s *userService) UpdateUser(ctx context.Context, id int64, req domain.UpdateUserParam) error {
+func (s *userService) UpdateUser(ctx context.Context, id int64, req db.UpdateUserParams) error {
 	user := domain.User{
 		ID:    id,
 		Name:  req.Name,
