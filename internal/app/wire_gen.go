@@ -12,12 +12,14 @@ import (
 	"go-dbsqlc/internal/handler"
 	"go-dbsqlc/internal/repository"
 	"go-dbsqlc/internal/service"
+	"go-dbsqlc/internal/validator"
 	"log/slog"
 )
 
 // Injectors from wire.go:
 
 func InitializeApp(cfg *config.Config) (*App, func(), error) {
+	logger := slog.Default()
 	sqlDB, cleanup, err := config.NewMySQL(cfg)
 	if err != nil {
 		return nil, nil, err
@@ -25,11 +27,11 @@ func InitializeApp(cfg *config.Config) (*App, func(), error) {
 	queries := db.New(sqlDB)
 	userRepository := repository.NewUserRepository(queries)
 	userService := service.NewUserService(userRepository)
-	userHandler := handler.NewUserHandler(userService)
-	logger := slog.Default()
+	userHandler := handler.NewUserHandler(logger, userService)
+	validate := validator.NewValidator()
 	productRepository := repository.NewProductRepository(queries)
 	productService := service.NewProductService(logger, productRepository)
-	productHandler := handler.NewProductHandler(logger, productService)
+	productHandler := handler.NewProductHandler(validate, logger, productService)
 	handlersParam := handler.HandlersParam{
 		User:    userHandler,
 		Product: productHandler,

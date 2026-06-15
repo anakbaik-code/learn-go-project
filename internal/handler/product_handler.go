@@ -2,23 +2,29 @@ package handler
 
 import (
 	"encoding/json"
+	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/handler/dto"
 	"go-dbsqlc/internal/service"
+	validate "go-dbsqlc/internal/validator"
 	"go-dbsqlc/pkg/response"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type ProductHandler struct {
-	service service.ProductService
-	log     *slog.Logger
+	validator *validator.Validate
+	service   service.ProductService
+	log       *slog.Logger
 }
 
-func NewProductHandler(l *slog.Logger, s service.ProductService) *ProductHandler {
+func NewProductHandler(v *validator.Validate, l *slog.Logger, s service.ProductService) *ProductHandler {
 	return &ProductHandler{
-		service: s,
-		log:     l.With("component", "product_handler"),
+		validator: v,
+		service:   s,
+		log:       l.With("component", "product_handler"),
 	}
 }
 
@@ -36,6 +42,11 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.log.Debug("fetching product details", "product_id", id)
+
+	// validator
+	if err := validate.ValidateProductId(h.validator, id); err != nil {
+		http.Error(w, "id invalid", http.StatusBadRequest)
+	}
 
 	product, err := h.service.GetProduct(r.Context(), id)
 	if err != nil {
@@ -59,4 +70,45 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(finalResponse)
 }
 
+func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req dto.ProductRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
 
+	// mapping dto
+	product := domain.Product{
+		Name:  req.Name,
+		Price: req.Price,
+	}
+
+	// validator
+	if err := validate.ValidateCreateProduct(h.validator, product); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// service
+	result, err := h.service.CreateProduct(r.Context(), product)
+	if err != nil {
+		h.log.Error("failed create user from service ", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Mapping Response
+	userResponse := dto.ProductResponse{
+		ID:    result.ID,
+		Name:  result.Name,
+		Price: result.Price,
+	}
+
+	finalResponse := response.NewSuccessResponse(
+		"Product Created",
+		userResponse,
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
+}

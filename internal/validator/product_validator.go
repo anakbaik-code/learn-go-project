@@ -6,6 +6,13 @@ import (
 	"go-dbsqlc/internal/domain"
 )
 
+func ValidateProductId(v *validator.Validate, id int64) error {
+	if err :=v.Var(id,"gt=0");err!= nil{
+		return errors.New("id must grater than 0")
+	}
+	return nil
+}
+
 func ValidateCreateProduct(v *validator.Validate, product domain.Product) error {
 	if err := v.Var(product.Name, "required"); err != nil {
 		return errors.New("name must fill")
