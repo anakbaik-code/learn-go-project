@@ -8,7 +8,6 @@ import (
 	"go-dbsqlc/db"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/repository"
-	"go-dbsqlc/internal/validator"
 	"io"
 	"mime/multipart"
 	"os"
@@ -34,10 +33,6 @@ func NewUserService(r repository.UserRepository) UserService {
 }
 
 func (s *userService) GetUser(ctx context.Context, id int64) (domain.User, error) {
-	if err := validator.ValidateGetUserByID(id); err != nil {
-		return domain.User{}, err
-	}
-
 	user, err := s.repo.GetById(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -50,10 +45,6 @@ func (s *userService) GetUser(ctx context.Context, id int64) (domain.User, error
 }
 
 func (s *userService) CreateUser(ctx context.Context, user domain.User) (domain.User, error) {
-	if err := validator.ValidateCreateUser(user); err != nil {
-		return domain.User{}, err
-	}
-
 	user, err := s.repo.Create(ctx, user)
 	if err != nil {
 		return domain.User{}, err

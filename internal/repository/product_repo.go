@@ -28,16 +28,20 @@ func (r *productRepository) GetById(ctx context.Context, id int64) (domain.Produ
 		return domain.Product{}, err
 	}
 	return domain.Product{
-		ID:    result.ID,
-		Name:  result.Name,
-		Price: result.Price,
+		ID:        result.ID,
+		Name:      result.Name,
+		Price:     result.Price,
+		IsActive:  result.IsActive,
+		SalePrice: result.SalePrice,
 	}, nil
 }
 
 func (r *productRepository) Create(ctx context.Context, product domain.Product) (domain.Product, error) {
 	result, err := r.db.CreateProduct(ctx, db.CreateProductParams{
-		Name:  product.Name,
-		Price: product.Price,
+		Name:      product.Name,
+		Price:     product.Price,
+		IsActive:  product.IsActive,
+		SalePrice: product.SalePrice,
 	})
 	if err != nil {
 		return domain.Product{}, err
@@ -52,9 +56,11 @@ func (r *productRepository) Create(ctx context.Context, product domain.Product) 
 		return domain.Product{}, err
 	}
 	return domain.Product{
-		ID:    p.ID,
-		Name:  p.Name,
-		Price: p.Price,
+		ID:        p.ID,
+		Name:      p.Name,
+		Price:     p.Price,
+		IsActive:  p.IsActive,
+		SalePrice: p.SalePrice,
 	}, nil
 }
 
@@ -66,9 +72,11 @@ func (r *productRepository) List(ctx context.Context) ([]domain.Product, error) 
 	var result []domain.Product
 	for _, product := range products {
 		result = append(result, domain.Product{
-			ID:    product.ID,
-			Name:  product.Name,
-			Price: product.Price,
+			ID:        product.ID,
+			Name:      product.Name,
+			Price:     product.Price,
+			IsActive:  product.IsActive,
+			SalePrice: product.SalePrice,
 		})
 	}
 	return result, nil
@@ -76,9 +84,11 @@ func (r *productRepository) List(ctx context.Context) ([]domain.Product, error) 
 
 func (r *productRepository) Update(ctx context.Context, product domain.Product) error {
 	return r.db.UpdateProduct(ctx, db.UpdateProductParams{
-		ID:    product.ID,
-		Name:  product.Name,
-		Price: product.Price,
+		ID:        product.ID,
+		Name:      product.Name,
+		Price:     product.Price,
+		IsActive:  product.IsActive,
+		SalePrice: product.SalePrice,
 	})
 }
 

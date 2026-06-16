@@ -13,6 +13,8 @@ type Product struct {
 	Name      string
 	Price     int32
 	CreatedAt sql.NullTime
+	IsActive  bool
+	SalePrice int32
 }
 
 type User struct {

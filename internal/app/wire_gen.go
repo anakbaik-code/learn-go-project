@@ -19,6 +19,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeApp(cfg *config.Config) (*App, func(), error) {
+	validate := validator.NewValidator()
 	logger := slog.Default()
 	sqlDB, cleanup, err := config.NewMySQL(cfg)
 	if err != nil {
@@ -27,8 +28,7 @@ func InitializeApp(cfg *config.Config) (*App, func(), error) {
 	queries := db.New(sqlDB)
 	userRepository := repository.NewUserRepository(queries)
 	userService := service.NewUserService(userRepository)
-	userHandler := handler.NewUserHandler(logger, userService)
-	validate := validator.NewValidator()
+	userHandler := handler.NewUserHandler(validate, logger, userService)
 	productRepository := repository.NewProductRepository(queries)
 	productService := service.NewProductService(logger, productRepository)
 	productHandler := handler.NewProductHandler(validate, logger, productService)

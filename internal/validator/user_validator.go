@@ -2,41 +2,50 @@ package validator
 
 import (
 	"errors"
+	"fmt"
 	"go-dbsqlc/internal/domain"
+	"go-dbsqlc/internal/handler/dto"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"strings"
+
+	"github.com/go-playground/validator/v10"
 )
 
-func ValidateCreateUser(user domain.User) error {
-	if user.Name == "" {
-		return errors.New("name wajib")
+func ValidateCreateUser(v *validator.Validate, user domain.User) error {
+	if err := v.Var(user.Name, "required,min=3,max50"); err != nil {
+		return errors.New("name must fill and length must be between 3 and 50 character")
 	}
-
-	if user.Email == "" {
-		return errors.New("email wajib")
-	}
-
-	if !strings.Contains(user.Email, "@") {
-		return errors.New("email invalid")
+	if err := v.Var(user.Email, "required,email"); err != nil {
+		return errors.New("email must fill and must be a valid email format")
 	}
 	return nil
 }
 
-func ValidateGetUserByID(id int64) error {
-	if id <= 0 {
-		return errors.New("invalid user id")
+func ValidateGetUserByID(v *validator.Validate, id int64) error {
+	if err := v.Var(id, "gt=0"); err != nil {
+		return errors.New("id must grater than 0")
 	}
 	return nil
 }
+
+func ValidateUpdateUser(v *validator.Validate, user dto.UpdateUserRequest) error {
+	return v.Struct(user)
+}
+
 func ValidateImage(
+	v *validator.Validate,
 	file multipart.File,
 	header *multipart.FileHeader,
 ) error {
+	// max size = 5 MB
+	maxSize := int64(5 << 20)
 
-	if header.Size > 5<<20 {
-		return errors.New("file too large")
+	// to string using fmt
+	validationTag := fmt.Sprintf("lte=%d", maxSize)
+
+	if err := v.Var(header.Size, validationTag); err != nil {
+		return errors.New("file to large, maximum 5 MB")
 	}
 
 	buffer := make([]byte, 512)
@@ -47,14 +56,8 @@ func ValidateImage(
 	}
 
 	contentType := http.DetectContentType(buffer)
-
-	allowed := map[string]bool{
-		"image/jpeg": true,
-		"image/png":  true,
-	}
-
-	if !allowed[contentType] {
-		return errors.New("invalid file type")
+	if err := v.Var(contentType, "oneof=image/jpeg image/png"); err != nil {
+		return errors.New("invalid file type, only jpeg and png are allowed")
 	}
 
 	file.Seek(0, io.SeekStart)

@@ -57,9 +57,11 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 	// Mapping Response
 	productResponse := dto.ProductResponse{
-		ID:    product.ID,
-		Name:  product.Name,
-		Price: product.Price,
+		ID:        product.ID,
+		Name:      product.Name,
+		Price:     product.Price,
+		IsActive:  product.IsActive,
+		SalePrice: product.SalePrice,
 	}
 	finalResponse := response.NewSuccessResponse(
 		"successfully fetched product details",
@@ -71,23 +73,36 @@ func (h *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var req dto.ProductRequest
+	var req dto.CreateProductNestedRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-
-	// mapping dto
-	product := domain.Product{
-		Name:  req.Name,
-		Price: req.Price,
-	}
-
+	h.log.Info("Cek isi DTO hasil decode JSON", 
+        "Name", req.Name, 
+        "IsActive_Dari_Postman", req.Discount.IsActive, 
+        "SalePrice_Dari_Postman", req.Discount.SalePrice,
+    )
+	
 	// validator
-	if err := validate.ValidateCreateProduct(h.validator, product); err != nil {
+	if err := validate.ValidateCreateProductNested(h.validator, req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	finalSalePrice := req.Discount.SalePrice
+    if !req.Discount.IsActive {
+        finalSalePrice = 0
+    }
+
+	// mapping dto
+	product := domain.Product{
+		Name:      req.Name,
+		Price:     int32(req.Price),
+		IsActive:  req.Discount.IsActive,
+		SalePrice: int32(finalSalePrice),
+	}
+
+	
 	// service
 	result, err := h.service.CreateProduct(r.Context(), product)
 	if err != nil {
@@ -98,9 +113,11 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Mapping Response
 	userResponse := dto.ProductResponse{
-		ID:    result.ID,
-		Name:  result.Name,
-		Price: result.Price,
+		ID:        result.ID,
+		Name:      result.Name,
+		Price:     result.Price,
+		IsActive:  result.IsActive,
+		SalePrice: result.SalePrice,
 	}
 
 	finalResponse := response.NewSuccessResponse(

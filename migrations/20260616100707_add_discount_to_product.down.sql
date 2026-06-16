@@ -1,0 +1,3 @@
+ALTER TABLE products
+DROP COLUMN is_active,
+DROP COLUMN sale_price;

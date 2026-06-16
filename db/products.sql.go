@@ -12,18 +12,25 @@ import (
 
 const createProduct = `-- name: CreateProduct :execresult
 INSERT INTO
-    products (name, price)
+    products (name, price, is_active, sale_price)
 VALUES
-    (?, ?)
+    (?, ?, ?,?)
 `
 
 type CreateProductParams struct {
-	Name  string
-	Price int32
+	Name      string
+	Price     int32
+	IsActive  bool
+	SalePrice int32
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createProduct, arg.Name, arg.Price)
+	return q.db.ExecContext(ctx, createProduct,
+		arg.Name,
+		arg.Price,
+		arg.IsActive,
+		arg.SalePrice,
+	)
 }
 
 const deleteProduct = `-- name: DeleteProduct :exec
@@ -39,7 +46,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 
 const getProduct = `-- name: GetProduct :one
 SELECT
-    id, name, price, created_at
+    id, name, price, created_at, is_active, sale_price
 FROM
     products
 WHERE
@@ -54,13 +61,15 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 		&i.Name,
 		&i.Price,
 		&i.CreatedAt,
+		&i.IsActive,
+		&i.SalePrice,
 	)
 	return i, err
 }
 
 const listProducts = `-- name: ListProducts :many
 SELECT
-    id, name, price, created_at
+    id, name, price, created_at, is_active, sale_price
 FROM
     products
 `
@@ -79,6 +88,8 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 			&i.Name,
 			&i.Price,
 			&i.CreatedAt,
+			&i.IsActive,
+			&i.SalePrice,
 		); err != nil {
 			return nil, err
 		}
@@ -97,18 +108,28 @@ const updateProduct = `-- name: UpdateProduct :exec
 UPDATE products
 SET
     name = ?,
-    price= ?
+    price = ?,
+    is_active = ?,
+    sale_price = ?
 WHERE
     id = ?
 `
 
 type UpdateProductParams struct {
-	Name  string
-	Price int32
-	ID    int64
+	Name      string
+	Price     int32
+	IsActive  bool
+	SalePrice int32
+	ID        int64
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
-	_, err := q.db.ExecContext(ctx, updateProduct, arg.Name, arg.Price, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateProduct,
+		arg.Name,
+		arg.Price,
+		arg.IsActive,
+		arg.SalePrice,
+		arg.ID,
+	)
 	return err
 }

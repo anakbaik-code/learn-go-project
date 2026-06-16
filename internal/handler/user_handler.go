@@ -2,30 +2,29 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/go-playground/validator/v10"
 	"go-dbsqlc/db"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/handler/dto"
 	"go-dbsqlc/internal/service"
-	"go-dbsqlc/internal/validator"
+	validate "go-dbsqlc/internal/validator"
 	"go-dbsqlc/pkg/response"
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	playvalidator "github.com/go-playground/validator/v10"
 )
 
 type UserHandler struct {
-	service  service.UserService
-	validate *playvalidator.Validate
-	log      *slog.Logger
+	validator *validator.Validate
+	service   service.UserService
+	log       *slog.Logger
 }
 
-func NewUserHandler(l *slog.Logger, s service.UserService) *UserHandler {
+func NewUserHandler(v *validator.Validate, l *slog.Logger, s service.UserService) *UserHandler {
 	return &UserHandler{
-		service:  s,
-		validate: playvalidator.New(),
-		log:      l.With("component", "users_handler"),
+		validator: v,
+		service:   s,
+		log:       l.With("component", "users_handler"),
 	}
 }
 
@@ -44,6 +43,11 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Email: req.Email,
 	}
 
+	// validator
+	if err := validate.ValidateCreateUser(h.validator, user); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	// panggil service
 	result, err := h.service.CreateUser(r.Context(), user)
 	if err != nil {
@@ -81,6 +85,12 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		http.Error(w, "Id invalid", http.StatusBadRequest)
+		return
+	}
+
+	// validator
+	if err := validate.ValidateGetUserByID(h.validator, id); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -152,10 +162,9 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.validate.Struct(req)
-	if err != nil {
-		// Jika validasi gagal, kirim error 400 dan BERHENTI di sini
-		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
+	// validator
+	if err := validate.ValidateUpdateUser(h.validator, req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -172,8 +181,14 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	productResponse := dto.UserResponse{
+		ID:    id,
+		Name:  updateParam.Name,
+		Email: updateParam.Email,
+	}
+
 	finalResponse := response.NewSuccessResponse[any](
-		"User updated successfully", nil,
+		"User updated successfully", productResponse,
 	)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -223,8 +238,8 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = validator.ValidateImage(file, header)
-	if err != nil {
+	// validator
+	if err := validate.ValidateImage(h.validator, file, header); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
