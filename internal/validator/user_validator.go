@@ -3,7 +3,6 @@ package validator
 import (
 	"errors"
 	"fmt"
-	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/handler/dto"
 	"io"
 	"mime/multipart"
@@ -12,12 +11,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ValidateCreateUser(v *validator.Validate, user domain.User) error {
-	if err := v.Var(user.Name, "required,min=3,max50"); err != nil {
-		return errors.New("name must fill and length must be between 3 and 50 character")
-	}
-	if err := v.Var(user.Email, "required,email"); err != nil {
-		return errors.New("email must fill and must be a valid email format")
+func ValidateCreateUser(v *validator.Validate, req dto.CreateUserRequest) error {
+	if err := v.Struct(req); err != nil {
+		// Lu bisa return custom error, atau ngebongkar error bawaannya biar detail
+		return errors.New("validation failed: check your name, email, or addresses format")
 	}
 	return nil
 }
@@ -29,8 +26,12 @@ func ValidateGetUserByID(v *validator.Validate, id int64) error {
 	return nil
 }
 
-func ValidateUpdateUser(v *validator.Validate, user dto.UpdateUserRequest) error {
-	return v.Struct(user)
+func ValidateUpdateUser(v *validator.Validate, req dto.UpdateUserRequest) error {
+	if err := v.Struct(req); err != nil {
+		// Lu bisa return custom error, atau ngebongkar error bawaannya biar detail
+		return errors.New("validation failed: check your name, email, or addresses format")
+	}
+	return nil
 }
 
 func ValidateImage(

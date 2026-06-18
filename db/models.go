@@ -24,3 +24,13 @@ type User struct {
 	CreatedAt sql.NullTime
 	AvatarUrl sql.NullString
 }
+
+type UserAddress struct {
+	ID        int32
+	UserID    int64
+	Street    string
+	City      string
+	Country   string
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+}

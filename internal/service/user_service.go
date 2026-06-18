@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"go-dbsqlc/db"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/repository"
 	"io"
@@ -17,7 +16,7 @@ type UserService interface {
 	GetUser(ctx context.Context, id int64) (domain.User, error)
 	CreateUser(ctx context.Context, user domain.User) (domain.User, error)
 	ListUsers(ctx context.Context) ([]domain.User, error)
-	UpdateUser(ctx context.Context, id int64, req db.UpdateUserParams) error
+	UpdateUser(ctx context.Context, user domain.User) error
 	DeleteUser(ctx context.Context, id int64) error
 	UploadAvatar(ctx context.Context, id int64, file multipart.File, header *multipart.FileHeader) (string, error)
 }
@@ -45,7 +44,7 @@ func (s *userService) GetUser(ctx context.Context, id int64) (domain.User, error
 }
 
 func (s *userService) CreateUser(ctx context.Context, user domain.User) (domain.User, error) {
-	user, err := s.repo.Create(ctx, user)
+	user, err := s.repo.Create(ctx, user, user.Addresses)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -61,13 +60,12 @@ func (s *userService) ListUsers(ctx context.Context) ([]domain.User, error) {
 	return users, nil
 }
 
-func (s *userService) UpdateUser(ctx context.Context, id int64, req db.UpdateUserParams) error {
-	user := domain.User{
-		ID:    id,
-		Name:  req.Name,
-		Email: req.Email,
+func (s *userService) UpdateUser(ctx context.Context, user domain.User) error {
+	if err := s.repo.Update(ctx, user, user.Addresses); err != nil {
+		return err
 	}
-	return s.repo.Update(ctx, user)
+
+	return nil
 }
 
 func (s *userService) DeleteUser(ctx context.Context, id int64) error {

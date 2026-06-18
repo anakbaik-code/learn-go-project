@@ -26,7 +26,7 @@ func InitializeApp(cfg *config.Config) (*App, func(), error) {
 		return nil, nil, err
 	}
 	queries := db.New(sqlDB)
-	userRepository := repository.NewUserRepository(queries)
+	userRepository := repository.NewUserRepository(sqlDB, queries)
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(validate, logger, userService)
 	productRepository := repository.NewProductRepository(queries)

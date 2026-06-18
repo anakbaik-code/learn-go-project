@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
-	"go-dbsqlc/db"
 	"go-dbsqlc/internal/domain"
 	"go-dbsqlc/internal/handler/dto"
 	"go-dbsqlc/internal/service"
@@ -31,20 +30,30 @@ func NewUserHandler(v *validator.Validate, l *slog.Logger, s service.UserService
 func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	//  decode JSON request
 	var req dto.CreateUserRequest
+
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
+		http.Error(w, "invalid body json", http.StatusBadRequest)
 		return
+	}
+	var domainAddress []domain.Address
+	for _, item := range req.Addresses {
+		domainAddress = append(domainAddress, domain.Address{
+			Street:  item.Street,
+			City:    item.City,
+			Country: item.Country,
+		})
 	}
 
 	// mapping ke domain
 	user := domain.User{
-		Name:  req.Name,
-		Email: req.Email,
+		Name:      req.Name,
+		Email:     req.Email,
+		Addresses: domainAddress,
 	}
 
 	// validator
-	if err := validate.ValidateCreateUser(h.validator, user); err != nil {
+	if err := validate.ValidateCreateUser(h.validator, req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -56,11 +65,21 @@ func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var addressesResponse []dto.AddressResponse
+	for _, addr := range result.Addresses {
+		addressesResponse = append(addressesResponse, dto.AddressResponse{
+			Street:  addr.Street,
+			City:    addr.City,
+			Country: addr.Country,
+		})
+	}
+
 	// Mapping Response
 	userResponse := dto.UserResponse{
-		ID:    result.ID,
-		Name:  result.Name,
-		Email: result.Email,
+		ID:        result.ID,
+		Name:      result.Name,
+		Email:     result.Email,
+		Addresses: addressesResponse,
 	}
 
 	finalResponse := response.NewSuccessResponse(
@@ -102,11 +121,21 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mapping REsponse
+	var addressesResponse []dto.AddressResponse
+	for _, addr := range user.Addresses {
+		addressesResponse = append(addressesResponse, dto.AddressResponse{
+			Street:  addr.Street,
+			City:    addr.City,
+			Country: addr.Country,
+		})
+	}
+
+	// Mapping Response
 	userResponse := dto.UserResponse{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Addresses: addressesResponse,
 	}
 	finalResponse := response.NewSuccessResponse(
 		"succesfully get user id ",
@@ -120,22 +149,32 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
-	users, err := h.service.ListUsers(r.Context())
+	usersDomain, err := h.service.ListUsers(r.Context())
 	if err != nil {
 		h.log.Error("failed to get list product from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// Mapping DTO use Slice
-	userResponse := make([]dto.UserResponse, 0, len(users))
-	for _, v := range users {
-		userDto := dto.UserResponse{
-			ID:    v.ID,
-			Name:  v.Name,
-			Email: v.Name,
+
+	var userResponse []dto.UserResponse
+	for _, user := range usersDomain {
+		var addressesResponse []dto.AddressResponse
+		for _, addr := range user.Addresses {
+			addressesResponse = append(addressesResponse, dto.AddressResponse{
+				Street:  addr.Street,
+				City:    addr.City,
+				Country: addr.Country,
+			})
 		}
-		userResponse = append(userResponse, userDto)
+		userResponse = append(userResponse, dto.UserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			Addresses: addressesResponse,
+		})
 	}
+	// Mapping DTO use Slice
+
 	finalResponse := response.NewSuccessResponse(
 		"Successfully fetched user list",
 		userResponse,
@@ -168,27 +207,49 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// mapping param
-	updateParam := db.UpdateUserParams{
-		Name:  req.Name,
-		Email: req.Email,
+	// mapping from DTO to slice
+	var domainAddresses []domain.Address
+	for _, item := range req.Addresses {
+		domainAddresses = append(domainAddresses, domain.Address{
+			Street:  item.Street,
+			City:    item.City,
+			Country: item.Country,
+		})
 	}
 
-	err = h.service.UpdateUser(r.Context(), id, updateParam)
+	// add domainAddress to object domain.User
+	userDomain := domain.User{
+		ID:        id,
+		Name:      req.Name,
+		Email:     req.Email,
+		Addresses: domainAddresses,
+	}
+
+	err = h.service.UpdateUser(r.Context(), userDomain)
 	if err != nil {
 		h.log.Error("failed update product from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	productResponse := dto.UserResponse{
-		ID:    id,
-		Name:  updateParam.Name,
-		Email: updateParam.Email,
+	var addressesResponse []dto.AddressResponse
+	for _, addr := range userDomain.Addresses {
+		addressesResponse = append(addressesResponse, dto.AddressResponse{
+			Street:  addr.Street,
+			City:    addr.City,
+			Country: addr.Country,
+		})
+	}
+
+	userResponse := dto.UserResponse{
+		ID:        id,
+		Name:      userDomain.Name,
+		Email:     userDomain.Email,
+		Addresses: addressesResponse,
 	}
 
 	finalResponse := response.NewSuccessResponse[any](
-		"User updated successfully", productResponse,
+		"User updated successfully", userResponse,
 	)
 
 	w.Header().Set("Content-Type", "application/json")
