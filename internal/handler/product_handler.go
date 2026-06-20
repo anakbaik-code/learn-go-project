@@ -78,21 +78,25 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-	h.log.Info("Cek isi DTO hasil decode JSON", 
-        "Name", req.Name, 
-        "IsActive_Dari_Postman", req.Discount.IsActive, 
-        "SalePrice_Dari_Postman", req.Discount.SalePrice,
-    )
-	
+
 	// validator
-	if err := validate.ValidateCreateProductNested(h.validator, req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	errs := validate.ValidateCreateProduct(h.validator, req)
+	
+	if errs != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		
+		// Kirim kumpulan pesan error-nya langsung sebagai JSON object ke Postman
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": "Validasi gagal mase!",
+			"errors":  errs, 
+		})
 		return
 	}
 	finalSalePrice := req.Discount.SalePrice
-    if !req.Discount.IsActive {
-        finalSalePrice = 0
-    }
+	if !req.Discount.IsActive {
+		finalSalePrice = 0
+	}
 
 	// mapping dto
 	product := domain.Product{
@@ -100,9 +104,9 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Price:     int32(req.Price),
 		IsActive:  req.Discount.IsActive,
 		SalePrice: int32(finalSalePrice),
+		Sku:       req.Sku,
 	}
 
-	
 	// service
 	result, err := h.service.CreateProduct(r.Context(), product)
 	if err != nil {
@@ -118,11 +122,41 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Price:     result.Price,
 		IsActive:  result.IsActive,
 		SalePrice: result.SalePrice,
+		Sku:       result.Sku,
 	}
 
 	finalResponse := response.NewSuccessResponse(
 		"Product Created",
 		userResponse,
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(finalResponse)
+}
+
+func (h *ProductHandler) List(w http.ResponseWriter, r *http.Request) {
+	productDomain, err := h.service.ListProduct(r.Context())
+	if err != nil {
+		h.log.Error("failed to get list users from service", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var productResponse []dto.ProductResponse
+	for _, product := range productDomain {
+		productResponse = append(productResponse, dto.ProductResponse{
+			ID:        product.ID,
+			Name:      product.Name,
+			Price:     product.Price,
+			IsActive:  product.IsActive,
+			SalePrice: product.SalePrice,
+			Sku:       product.Sku,
+		})
+	}
+	finalResponse := response.NewSuccessResponse(
+		"successfully fetched products list",
+		productResponse,
 	)
 
 	w.Header().Set("Content-Type", "application/json")

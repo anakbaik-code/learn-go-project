@@ -1,8 +1,8 @@
 -- name: CreateProduct :execresult
 INSERT INTO
-    products (name, price, is_active, sale_price)
+    products (name, price, is_active, sale_price, sku)
 VALUES
-    (?, ?, ?,?);
+    (?, ?, ?, ?, ?);
 
 -- name: GetProduct :one
 SELECT
@@ -24,7 +24,8 @@ SET
     name = ?,
     price = ?,
     is_active = ?,
-    sale_price = ?
+    sale_price = ?,
+    sku = ?
 WHERE
     id = ?;
 

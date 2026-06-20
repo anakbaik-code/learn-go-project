@@ -151,7 +151,7 @@ func (h *UserHandler) GetById(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	usersDomain, err := h.service.ListUsers(r.Context())
 	if err != nil {
-		h.log.Error("failed to get list product from service", "error", err)
+		h.log.Error("failed to get list users from service", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

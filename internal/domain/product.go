@@ -6,4 +6,5 @@ type Product struct {
 	Price     int32
 	IsActive  bool
 	SalePrice int32
+	Sku       string
 }

@@ -12,9 +12,9 @@ import (
 
 const createProduct = `-- name: CreateProduct :execresult
 INSERT INTO
-    products (name, price, is_active, sale_price)
+    products (name, price, is_active, sale_price, sku)
 VALUES
-    (?, ?, ?,?)
+    (?, ?, ?, ?, ?)
 `
 
 type CreateProductParams struct {
@@ -22,6 +22,7 @@ type CreateProductParams struct {
 	Price     int32
 	IsActive  bool
 	SalePrice int32
+	Sku       string
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error) {
@@ -30,6 +31,7 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (s
 		arg.Price,
 		arg.IsActive,
 		arg.SalePrice,
+		arg.Sku,
 	)
 }
 
@@ -46,7 +48,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 
 const getProduct = `-- name: GetProduct :one
 SELECT
-    id, name, price, created_at, is_active, sale_price
+    id, name, price, created_at, is_active, sale_price, sku
 FROM
     products
 WHERE
@@ -63,13 +65,14 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
 		&i.CreatedAt,
 		&i.IsActive,
 		&i.SalePrice,
+		&i.Sku,
 	)
 	return i, err
 }
 
 const listProducts = `-- name: ListProducts :many
 SELECT
-    id, name, price, created_at, is_active, sale_price
+    id, name, price, created_at, is_active, sale_price, sku
 FROM
     products
 `
@@ -90,6 +93,7 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 			&i.CreatedAt,
 			&i.IsActive,
 			&i.SalePrice,
+			&i.Sku,
 		); err != nil {
 			return nil, err
 		}
@@ -110,7 +114,8 @@ SET
     name = ?,
     price = ?,
     is_active = ?,
-    sale_price = ?
+    sale_price = ?,
+    sku = ?
 WHERE
     id = ?
 `
@@ -120,6 +125,7 @@ type UpdateProductParams struct {
 	Price     int32
 	IsActive  bool
 	SalePrice int32
+	Sku       string
 	ID        int64
 }
 
@@ -129,6 +135,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.Price,
 		arg.IsActive,
 		arg.SalePrice,
+		arg.Sku,
 		arg.ID,
 	)
 	return err

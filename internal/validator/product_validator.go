@@ -24,7 +24,25 @@ func ValidateProductId(v *validator.Validate, id int64) error {
 // 	return nil
 // }
 
-func ValidateCreateProductNested(v *validator.Validate, input dto.CreateProductNestedRequest) error {
-	r := v.Struct(input)
-	return r
+func ValidateCreateProduct(v *validator.Validate, req dto.CreateProductNestedRequest) map[string]string {
+	err := v.Struct(req)
+	if err != nil {
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			errors := make(map[string]string)
+
+			for _, fieldErr := range validationErrors {
+				field := fieldErr.Field()
+				switch fieldErr.Tag() {
+				case "required":
+					errors[field] = "must be fill"
+				case "valid_sku":
+					errors[field] = "Format SKU wrong!"
+				default:
+					errors[field] = "Data error"
+				}
+			}
+			return errors 
+		}
+	}
+	return nil
 }

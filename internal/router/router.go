@@ -27,6 +27,7 @@ func NewRouter(app *app.App) http.Handler {
 	// Product Route
 	mux.HandleFunc("GET /products/{id}", app.Handler.Product.GetById)
 	mux.HandleFunc("POST /products", app.Handler.Product.Create)
+	mux.HandleFunc("GET /products", app.Handler.Product.List)
 	// NotFound Route
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

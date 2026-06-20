@@ -7,13 +7,13 @@ type AddressRequest struct {
 }
 
 type CreateUserRequest struct {
-	Name      string           `json:"name" validate:"required,min=3,max=50"`
+	Name      string           `json:"name" validate:"varchar"`
 	Email     string           `json:"email" validate:"required,email"`
 	Addresses []AddressRequest `json:"addresses" validate:"required,dive"` 
 }
 
 type UpdateUserRequest struct {
-	Name      string           `json:"name" validate:"required,min=3"`
+	Name      string           `json:"name" validate:"varchar"`
 	Email     string           `json:"email" validate:"required,email"`
 	Addresses []AddressRequest `json:"addresses" validate:"required,dive"`
 }

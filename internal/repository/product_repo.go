@@ -33,6 +33,7 @@ func (r *productRepository) GetById(ctx context.Context, id int64) (domain.Produ
 		Price:     result.Price,
 		IsActive:  result.IsActive,
 		SalePrice: result.SalePrice,
+		Sku:       result.Sku,
 	}, nil
 }
 
@@ -42,6 +43,7 @@ func (r *productRepository) Create(ctx context.Context, product domain.Product) 
 		Price:     product.Price,
 		IsActive:  product.IsActive,
 		SalePrice: product.SalePrice,
+		Sku:       product.Sku,
 	})
 	if err != nil {
 		return domain.Product{}, err
@@ -61,6 +63,7 @@ func (r *productRepository) Create(ctx context.Context, product domain.Product) 
 		Price:     p.Price,
 		IsActive:  p.IsActive,
 		SalePrice: p.SalePrice,
+		Sku:       p.Sku,
 	}, nil
 }
 
@@ -77,6 +80,7 @@ func (r *productRepository) List(ctx context.Context) ([]domain.Product, error) 
 			Price:     product.Price,
 			IsActive:  product.IsActive,
 			SalePrice: product.SalePrice,
+			Sku:       product.Sku,
 		})
 	}
 	return result, nil
@@ -89,6 +93,7 @@ func (r *productRepository) Update(ctx context.Context, product domain.Product) 
 		Price:     product.Price,
 		IsActive:  product.IsActive,
 		SalePrice: product.SalePrice,
+		Sku:       product.Sku,
 	})
 }
 
