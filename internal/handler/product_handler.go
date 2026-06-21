@@ -81,15 +81,15 @@ func (h *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// validator
 	errs := validate.ValidateCreateProduct(h.validator, req)
-	
+
 	if errs != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		
+
 		// Kirim kumpulan pesan error-nya langsung sebagai JSON object ke Postman
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"message": "Validasi gagal mase!",
-			"errors":  errs, 
+		json.NewEncoder(w).Encode(map[string]any{
+			"message": "Validasi error",
+			"errors":  errs,
 		})
 		return
 	}

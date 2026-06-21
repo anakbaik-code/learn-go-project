@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"go-dbsqlc/internal/handler/dto"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -14,35 +15,52 @@ func ValidateProductId(v *validator.Validate, id int64) error {
 	return nil
 }
 
-// func ValidateCreateProduct(v *validator.Validate, product domain.Product) error {
-// 	if err := v.Var(product.Name, "required"); err != nil {
-// 		return errors.New("name must fill")
-// 	}
-// 	if err := v.Var(product.Price, "gt=0"); err != nil {
-// 		return errors.New("price must not null")
-// 	}
-// 	return nil
-// }
-
-func ValidateCreateProduct(v *validator.Validate, req dto.CreateProductNestedRequest) map[string]string {
+func ValidateCreateProduct(v *validator.Validate, req dto.CreateProductNestedRequest) []dto.ValidationError {
 	err := v.Struct(req)
-	if err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			errors := make(map[string]string)
+	if err == nil {
+		return nil
+	}
 
-			for _, fieldErr := range validationErrors {
-				field := fieldErr.Field()
-				switch fieldErr.Tag() {
-				case "required":
-					errors[field] = "must be fill"
-				case "valid_sku":
-					errors[field] = "Format SKU wrong!"
-				default:
-					errors[field] = "Data error"
-				}
-			}
-			return errors 
+	var validationErrors validator.ValidationErrors
+	if !errors.As(err, &validationErrors) {
+		return []dto.ValidationError{
+			{
+				Field:   "general",
+				Message: err.Error(),
+			},
 		}
 	}
-	return nil
+
+	var result []dto.ValidationError
+
+	for _, fieldErr := range validationErrors {
+		var msg string
+		switch fieldErr.Tag() {
+		case "required":
+			msg = "field is required"
+		case "valid_sku":
+			msg = "invalid sku format"
+		case "gt":
+			msg = "must be greater than zero"
+		default:
+			msg = "invalid value"
+		}
+		// Namespace menghasilkan: "CreateProductNestedRequest.Items[2].Price"
+		fullNamespace := fieldErr.Namespace()
+		jsonPath := fullNamespace
+
+		// Potong nama struct utamanya di depan
+		if parts := strings.SplitN(fullNamespace, ".", 2); len(parts) > 1 {
+			jsonPath = parts[1]
+		}
+
+		result = append(result, dto.ValidationError{
+			// Kita ubah path-nya jadi lowercase sesuai kebutuhan kamu, misal: "items[2].price"
+			Field:   strings.ToLower(jsonPath),
+			Message: msg,
+		})
+	}
+
+	return result
+
 }

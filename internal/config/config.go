@@ -1,10 +1,7 @@
 package config
 
 import (
-	"log"
-	"os"
-
-	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -18,17 +15,24 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	err := godotenv.Load()
+	
+	v := viper.New()
+	v.SetConfigName("config")
+	v.SetConfigType("yaml")
+	v.AddConfigPath(".")
+
+	err := v.ReadInConfig()
 	if err != nil {
-		log.Println("No .env file found")
+		panic(err)
 	}
+
 	return &Config{
-		ApiKey:  os.Getenv("API_KEY"),
-		AppPort: os.Getenv("APP_PORT"),
-		DBHost:  os.Getenv("DB_HOST"),
-		DBUser:  os.Getenv("DB_USER"),
-		DBPass:  os.Getenv("DB_PASS"),
-		DBName:  os.Getenv("DB_NAME"),
-		LogLevel: os.Getenv("LOG_LEVEL"),
+		ApiKey:   v.GetString("api_key"),
+		AppPort:  v.GetString("app.port"),
+		DBHost:   v.GetString("database.host"),
+		DBUser:   v.GetString("database.user"),
+		DBPass:   v.GetString("database.pass"),
+		DBName:   v.GetString("database.name"),
+		LogLevel: v.GetString("log.level"),
 	}
 }

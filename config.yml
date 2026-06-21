@@ -1,0 +1,13 @@
+api_key: Ky0b1f21Z0ZS6mGmCmaJJ/do23lKu94nnYA6acOQPZE=
+
+app:
+  port: 8080
+
+database:
+  host: 127.0.0.1:3306
+  user: root
+  pass: alif13579
+  name: go_sqlc_db
+
+log:
+  level: development
